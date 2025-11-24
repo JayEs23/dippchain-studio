@@ -7,6 +7,7 @@ import { LogOut, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatAddress } from "@/lib/utils";
 
+// Client-side only component to avoid SSR issues with AppKit
 export function WalletConnect() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();

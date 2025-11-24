@@ -2,7 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Wallet, Menu, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useRouter } from "next/router";
-import { WalletConnect } from "@/components/wallet/WalletConnect";
+import dynamic from "next/dynamic";
+
+// Dynamically import WalletConnect to avoid SSR issues with AppKit
+const WalletConnect = dynamic(
+  () => import("@/components/wallet/WalletConnect").then((mod) => ({ default: mod.WalletConnect })),
+  { ssr: false }
+);
 
 export function Header() {
   const router = useRouter();
