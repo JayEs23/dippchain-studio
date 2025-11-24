@@ -15,30 +15,17 @@ import { useEffect, useState } from "react";
  */
 export function useAppKitSafe() {
   const [mounted, setMounted] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  
+  // Always call the hook unconditionally at the top level (React rules)
+  // Cannot wrap hooks in try-catch or conditionals
+  const appKit = useAppKit();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Always call the hook unconditionally (React rules)
-  // The hook must be called at the top level, not conditionally
-  let appKit;
-  try {
-    appKit = useAppKit();
-    if (hasError) setHasError(false); // Clear error if hook succeeds
-  } catch (err) {
-    if (!hasError) {
-      setHasError(true);
-      if (typeof window !== "undefined") {
-        console.warn("AppKit not initialized:", err);
-      }
-    }
-    appKit = null;
-  }
-
-  // Return null if not mounted or if there was an error
-  if (!mounted || hasError || !appKit) {
+  // Return null if not mounted (SSR) or if appKit is not available
+  if (!mounted || !appKit) {
     return null;
   }
 
