@@ -1,0 +1,358 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+/// Wallet-level identity
+model User {
+    address       String            @id @db.VarChar(64)
+    createdAt     DateTime          @default(now())
+    updatedAt     DateTime          @updatedAt
+    profile       Profile?
+    kycStatus     KycStatus?
+    ips           IP[]
+    listings      Listing[]
+    purchases     ListingPurchase[] @relation("UserPurchases")
+    revenueClaims RevenueClaim[]
+    proposals     Proposal[]
+    notifications Notification[]
+    activities    Activity[]
+    stakes        Stake[]
+    votes         Vote[]
+}
+
+model Profile {
+    id          Int      @id @default(autoincrement())
+    userAddress String   @unique @db.VarChar(64)
+    user        User     @relation(fields: [userAddress], references: [address], onDelete: Cascade)
+    displayName String?
+    bio         String?
+    avatarCid   String?
+    socials     Json?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
+
+model KycStatus {
+    id          Int           @id @default(autoincrement())
+    userAddress String        @unique @db.VarChar(64)
+    user        User          @relation(fields: [userAddress], references: [address], onDelete: Cascade)
+    status      KycStatusType @default(PENDING)
+    providerRef String?
+    updatedAt   DateTime      @default(now())
+}
+
+/// Core IP registry
+model IP {
+    id                   BigInt                @id
+    storyContract        String
+    storyTokenId         BigInt
+    ownerAddress         String                @db.VarChar(64)
+    owner                User?                 @relation(fields: [ownerAddress], references: [address])
+    title                String?
+    description          String?
+    category             IpCategory?
+    watermarkCid         String?
+    detectionEnabled     Boolean               @default(true)
+    isActive             Boolean               @default(true)
+    registeredAt         DateTime              @default(now())
+    contents             IPContent[]
+    fractionalization    Fractionalization?
+    listings             Listing[]
+    violations           Violation[]
+    proposals            Proposal[]
+    revenueDistributions RevenueDistribution[]
+    yieldVault           YieldVault?
+}
+
+model IPContent {
+    id        Int      @id @default(autoincrement())
+    ipId      BigInt
+    ip        IP       @relation(fields: [ipId], references: [id], onDelete: Cascade)
+    label     String?
+    cid       String
+    createdAt DateTime @default(now())
+}
+
+/// Fractionalization + royalty tokens
+model Fractionalization {
+    id                  Int      @id @default(autoincrement())
+    ipId                BigInt   @unique
+    ip                  IP       @relation(fields: [ipId], references: [id], onDelete: Cascade)
+    royaltyTokenAddress String   @unique
+    tokenName           String
+    tokenSymbol         String
+    totalSupply         Decimal  @db.Decimal(65, 30)
+    nftLocked           Boolean  @default(false)
+    fractionalizedAt    DateTime @default(now())
+}
+
+/// Marketplace
+model Listing {
+    id              BigInt            @id
+    ipId            BigInt
+    ip              IP                @relation(fields: [ipId], references: [id], onDelete: Cascade)
+    sellerAddress   String            @db.VarChar(64)
+    seller          User?             @relation(fields: [sellerAddress], references: [address])
+    tokenAddress    String
+    amount          Decimal           @db.Decimal(65, 30)
+    pricePerToken   Decimal           @db.Decimal(65, 30)
+    paymentToken    String?
+    status          ListingStatus     @default(ACTIVE)
+    expiresAt       DateTime?
+    slippageBps     Int?
+    transactionHash String?
+    createdAt       DateTime          @default(now())
+    updatedAt       DateTime          @updatedAt
+    purchases       ListingPurchase[]
+}
+
+model ListingPurchase {
+    id           Int      @id @default(autoincrement())
+    listingId    BigInt
+    listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    buyerAddress String   @db.VarChar(64)
+    buyer        User?    @relation("UserPurchases", fields: [buyerAddress], references: [address])
+    amount       Decimal  @db.Decimal(65, 30)
+    totalPrice   Decimal  @db.Decimal(65, 30)
+    txHash       String?
+    purchasedAt  DateTime @default(now())
+}
+
+/// Revenue distributions
+model RevenueDistribution {
+    id                  Int            @id @default(autoincrement())
+    chainDistributionId BigInt?
+    ipId                BigInt?
+    ip                  IP?            @relation(fields: [ipId], references: [id], onDelete: SetNull)
+    tokenAddress        String
+    amount              Decimal        @db.Decimal(65, 30)
+    paymentToken        String?
+    distributedBy       String?
+    txHash              String?
+    distributedAt       DateTime       @default(now())
+    claims              RevenueClaim[]
+}
+
+model RevenueClaim {
+    id             Int                 @id @default(autoincrement())
+    distributionId Int
+    distribution   RevenueDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+    claimerAddress String              @db.VarChar(64)
+    claimer        User?               @relation(fields: [claimerAddress], references: [address])
+    amount         Decimal             @db.Decimal(65, 30)
+    txHash         String?
+    claimedAt      DateTime            @default(now())
+}
+
+/// Yield vaults
+model YieldVault {
+    id                  Int                 @id @default(autoincrement())
+    ipId                BigInt?             @unique
+    ip                  IP?                 @relation(fields: [ipId], references: [id], onDelete: SetNull)
+    royaltyTokenAddress String              @unique
+    yieldTokenAddress   String
+    isActive            Boolean             @default(true)
+    createdAt           DateTime            @default(now())
+    stakes              Stake[]
+    distributions       YieldDistribution[]
+}
+
+model Stake {
+    id            Int        @id @default(autoincrement())
+    vaultId       Int
+    vault         YieldVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+    stakerAddress String     @db.VarChar(64)
+    staker        User?      @relation(fields: [stakerAddress], references: [address])
+    amount        Decimal    @db.Decimal(65, 30)
+    stakedAt      DateTime   @default(now())
+    unstakedAt    DateTime?
+}
+
+model YieldDistribution {
+    id            Int        @id @default(autoincrement())
+    vaultId       Int
+    vault         YieldVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+    amount        Decimal    @db.Decimal(65, 30)
+    txHash        String?
+    distributedAt DateTime   @default(now())
+}
+
+/// Violations & enforcement
+model Violation {
+    id              BigInt              @id
+    ipId            BigInt
+    ip              IP                  @relation(fields: [ipId], references: [id], onDelete: Cascade)
+    reporterAddress String              @db.VarChar(64)
+    similarityScore Int
+    evidenceCid     String
+    violationUrl    String?
+    status          ViolationStatus     @default(PENDING)
+    reportedAt      DateTime            @default(now())
+    resolvedAt      DateTime?
+    resolverAddress String?
+    notes           String?
+    evidences       ViolationEvidence[]
+}
+
+model ViolationEvidence {
+    id           Int          @id @default(autoincrement())
+    violationId  BigInt
+    violation    Violation    @relation(fields: [violationId], references: [id], onDelete: Cascade)
+    evidenceType EvidenceType @default(REPORT)
+    cid          String
+    description  String?
+    createdAt    DateTime     @default(now())
+}
+
+/// Governance
+model Proposal {
+    id             BigInt         @id
+    ipId           BigInt?
+    ip             IP?            @relation(fields: [ipId], references: [id], onDelete: SetNull)
+    creatorAddress String         @db.VarChar(64)
+    creator        User?          @relation(fields: [creatorAddress], references: [address])
+    title          String
+    description    String?
+    proposalType   ProposalType?
+    status         ProposalStatus @default(PENDING)
+    quorum         Decimal?       @db.Decimal(65, 30)
+    requiredVotes  Decimal?       @db.Decimal(65, 30)
+    startBlock     BigInt?
+    endBlock       BigInt?
+    createdAt      DateTime       @default(now())
+    executedAt     DateTime?
+    votes          Vote[]
+}
+
+model Vote {
+    id           Int        @id @default(autoincrement())
+    proposalId   BigInt
+    proposal     Proposal   @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+    voterAddress String     @db.VarChar(64)
+    voter        User?      @relation(fields: [voterAddress], references: [address])
+    choice       VoteChoice
+    weight       Decimal    @db.Decimal(65, 30)
+    txHash       String?
+    votedAt      DateTime   @default(now())
+}
+
+/// Notifications & activity feed
+model Notification {
+    id          Int              @id @default(autoincrement())
+    userAddress String           @db.VarChar(64)
+    user        User?            @relation(fields: [userAddress], references: [address], onDelete: Cascade)
+    type        NotificationType
+    entityType  String?
+    entityId    String?
+    metadata    Json?
+    isRead      Boolean          @default(false)
+    createdAt   DateTime         @default(now())
+}
+
+model Activity {
+    id           Int          @id @default(autoincrement())
+    userAddress  String?      @db.VarChar(64)
+    user         User?        @relation(fields: [userAddress], references: [address], onDelete: SetNull)
+    activityType ActivityType
+    entityType   String?
+    entityId     String?
+    metadata     Json?
+    createdAt    DateTime     @default(now())
+}
+
+/// Enums
+enum KycStatusType {
+    PENDING
+    VERIFIED
+    REJECTED
+}
+
+enum IpCategory {
+    ART
+    MUSIC
+    CODE
+    INVENTION
+    DESIGN
+    WRITING
+    OTHER
+}
+
+enum ListingStatus {
+    ACTIVE
+    PARTIAL
+    SOLD
+    CANCELLED
+    EXPIRED
+}
+
+enum ViolationStatus {
+    PENDING
+    ACCEPTED
+    CHALLENGED
+    RESOLVED
+    DISMISSED
+}
+
+enum EvidenceType {
+    REPORT
+    COUNTER
+}
+
+enum ProposalStatus {
+    PENDING
+    ACTIVE
+    SUCCEEDED
+    DEFEATED
+    EXECUTED
+    CANCELLED
+    EXPIRED
+}
+
+enum ProposalType {
+    METADATA
+    REVENUE
+    POLICY
+    CUSTOM
+}
+
+enum VoteChoice {
+    FOR
+    AGAINST
+    ABSTAIN
+}
+
+enum NotificationType {
+    VIOLATION
+    REVENUE
+    PROPOSAL
+    LISTING
+    GOVERNANCE
+    YIELD
+    SYSTEM
+}
+
+enum ActivityType {
+    REGISTER_IP
+    UPDATE_WATERMARK
+    ADD_CONTENT
+    TOGGLE_DETECTION
+    FRACTIONALIZE
+    CREATE_LISTING
+    BUY_LISTING
+    CANCEL_LISTING
+    DISTRIBUTE_REVENUE
+    CLAIM_REVENUE
+    CREATE_VAULT
+    STAKE_TOKENS
+    UNSTAKE_TOKENS
+    CLAIM_YIELD
+    REPORT_VIOLATION
+    RESOLVE_VIOLATION
+    CREATE_PROPOSAL
+    VOTE
+    EXECUTE_PROPOSAL
+}

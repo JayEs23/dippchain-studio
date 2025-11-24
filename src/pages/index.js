@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Shield, TrendingUp, Users, Lock, Zap, Globe } from "lucide-react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 export default function Home() {
   const router = useRouter();
@@ -209,9 +210,9 @@ export default function Home() {
             <div>
               <h4 className="mb-4 font-semibold">Platform</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/register-ip" className="transition-smooth hover:text-accent">Register IP</a></li>
-                <li><a href="/marketplace" className="transition-smooth hover:text-accent">Marketplace</a></li>
-                <li><a href="/governance" className="transition-smooth hover:text-accent">Governance</a></li>
+                <li><Link href="/register-ip" className="transition-smooth hover:text-accent">Register IP</Link></li>
+                <li><Link href="/marketplace" className="transition-smooth hover:text-accent">Marketplace</Link></li>
+                <li><Link href="/governance" className="transition-smooth hover:text-accent">Governance</Link></li>
               </ul>
             </div>
             <div>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, FileText, Image as ImageIcon, Link as LinkIcon, CheckCircle2, Loader2 } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, Link as LinkIcon, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useRegisterIP } from "@/hooks/useIPRegistry";
 
@@ -27,6 +27,26 @@ export default function RegisterIP() {
     watermarkHash: "",
     contentCids: [],
   });
+
+  // Pre-fill form from query parameters (when coming from create-story-nft page)
+  useEffect(() => {
+    if (router.isReady) {
+      const { storyNftContract, tokenId, name, description } = router.query;
+      if (storyNftContract && tokenId) {
+        setFormData((prev) => ({
+          ...prev,
+          storyNftContract: storyNftContract,
+          tokenId: tokenId,
+          title: name || prev.title,
+          description: description || prev.description,
+        }));
+        // Auto-advance to step 2 if NFT details are provided
+        if (storyNftContract && tokenId) {
+          setStep(2);
+        }
+      }
+    }
+  }, [router.isReady, router.query]);
 
   // Handle file uploads to IPFS
   const handleFileUpload = async (file, type) => {
@@ -137,6 +157,16 @@ export default function RegisterIP() {
             <p className="text-muted-foreground">
               Register your Story Protocol NFT on DippChain
             </p>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/create-story-nft")}
+                className="gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                Create New Story NFT First
+              </Button>
+            </div>
           </div>
 
           {/* Progress Steps */}
@@ -173,7 +203,14 @@ export default function RegisterIP() {
                     Connect Story NFT
                   </CardTitle>
                   <CardDescription>
-                    Enter your Story Protocol NFT details
+                    Enter your Story Protocol NFT details, or{" "}
+                    <button
+                      type="button"
+                      onClick={() => router.push("/create-story-nft")}
+                      className="text-accent hover:underline"
+                    >
+                      create a new one
+                    </button>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">

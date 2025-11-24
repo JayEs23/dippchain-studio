@@ -242,7 +242,7 @@ export default function Profile() {
                     <div className="flex flex-col items-center justify-center py-8">
                       <User className="mb-4 h-12 w-12 text-muted-foreground" />
                       <p className="mb-4 text-muted-foreground">
-                        You don't own any IP assets yet
+                        You don&apos;t own any IP assets yet
                       </p>
                       <Button
                         onClick={() => router.push("/register-ip")}
@@ -309,7 +309,7 @@ export default function Profile() {
                 <CardHeader>
                   <CardTitle>My Marketplace Listings</CardTitle>
                   <CardDescription>
-                    Active listings you've created on the marketplace
+                    Active listings you&apos;ve created on the marketplace
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -321,7 +321,7 @@ export default function Profile() {
                     <div className="flex flex-col items-center justify-center py-8">
                       <TrendingUp className="mb-4 h-12 w-12 text-muted-foreground" />
                       <p className="mb-4 text-muted-foreground">
-                        You don't have any active listings
+                        You don&apos;t have any active listings
                       </p>
                       <Button
                         variant="outline"

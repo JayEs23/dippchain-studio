@@ -21,8 +21,9 @@ export function useAppKitSafe() {
     setMounted(true);
   }, []);
 
-  // Always call the hook (React rules) - must be unconditional
-  let appKit = null;
+  // Always call the hook unconditionally (React rules)
+  // The hook must be called at the top level, not conditionally
+  let appKit;
   try {
     appKit = useAppKit();
     if (hasError) setHasError(false); // Clear error if hook succeeds
@@ -33,10 +34,11 @@ export function useAppKitSafe() {
         console.warn("AppKit not initialized:", err);
       }
     }
+    appKit = null;
   }
 
   // Return null if not mounted or if there was an error
-  if (!mounted || hasError) {
+  if (!mounted || hasError || !appKit) {
     return null;
   }
 

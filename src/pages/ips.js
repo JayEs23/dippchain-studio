@@ -31,37 +31,6 @@ export default function IPAssets() {
   });
 
   const ips = data?.ips || [];
-    {
-      id: "1",
-      title: "Digital Artwork Collection",
-      description: "Exclusive NFT collection featuring cyberpunk themes",
-      imageUrl: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=400&h=400&fit=crop",
-      dippChainId: "0x1a2b3c4d",
-      fractionalized: true,
-      volume: "$45,000",
-      holders: 127,
-    },
-    {
-      id: "2",
-      title: "Music Album Rights",
-      description: "Original soundtrack for indie game project",
-      imageUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=400&fit=crop",
-      dippChainId: "0x5e6f7g8h",
-      fractionalized: true,
-      volume: "$32,000",
-      holders: 89,
-    },
-    {
-      id: "3",
-      title: "Patent Documentation",
-      description: "Blockchain-based identity verification system",
-      imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop",
-      dippChainId: "0x9i0j1k2l",
-      fractionalized: false,
-      volume: "-",
-      holders: 1,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
