@@ -1,9 +1,7 @@
-import webpack from 'webpack';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Ignore React Native dependencies that MetaMask SDK tries to import
     // These are not needed for web/browser environments
     if (!isServer) {
